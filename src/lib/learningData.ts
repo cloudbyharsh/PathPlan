@@ -226,7 +226,7 @@ export function buildLearningPlan(skillGaps: SkillGap[]): LearningPlan {
   let weekCursor = 1;
   const phase1Weeks = req.slice(0, Math.ceil(req.length / 2)).reduce((s, m) => s + m.weekEstimate, 0) || 2;
   const phase2Weeks = req.slice(Math.ceil(req.length / 2)).reduce((s, m) => s + m.weekEstimate, 0) || 2;
-  const phase3Weeks = pref.reduce((s, m) => s + m.weekEstimate, 0) || 2;
+  void pref.reduce((s, m) => s + m.weekEstimate, 0);
 
   const phases: LearningPhase[] = [
     {
