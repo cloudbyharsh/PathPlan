@@ -1,80 +1,75 @@
-export type Role = "employee" | "manager" | "admin";
-
-export type Quarter = "Q1" | "Q2" | "Q3" | "Q4";
-
-export type OKRStatus = "on_track" | "at_risk" | "off_track" | "completed";
-
-export interface User {
-  id: string;
-  email: string;
-  full_name: string;
-  role: Role;
-  team_id: string;
-  avatar_initials: string;
+export interface SkillMatch {
+  skill: string;
+  inCV: boolean;
+  inJD: boolean;
+  priority: "required" | "preferred" | "bonus";
 }
 
-export interface Team {
-  id: string;
+export interface AnalysisResult {
+  matchScore: number;               // 0–100
+  strongMatches: string[];          // skills in both CV and JD
+  skillGaps: SkillGap[];            // skills in JD but not CV
+  extraSkills: string[];            // skills in CV but not JD (bonuses)
+  cvSummary: CVSummary;
+  jdSummary: JDSummary;
+}
+
+export interface SkillGap {
+  skill: string;
+  priority: "required" | "preferred";
+  category: SkillCategory;
+}
+
+export interface CVSummary {
+  detectedSkills: string[];
+  yearsOfExperience: number | null;
+  educationLevel: string | null;
+}
+
+export interface JDSummary {
+  role: string;
+  company: string | null;
+  requiredSkills: string[];
+  preferredSkills: string[];
+  seniority: "junior" | "mid" | "senior" | "lead" | "unknown";
+}
+
+export type SkillCategory =
+  | "Technical"
+  | "Data & Analytics"
+  | "Product & Strategy"
+  | "Leadership & Management"
+  | "Communication"
+  | "Domain Knowledge"
+  | "Tools & Platforms";
+
+export interface LearningResource {
+  title: string;
+  provider: string;
+  url: string;
+  duration: string;
+  type: "course" | "book" | "practice" | "certification" | "project";
+  free: boolean;
+}
+
+export interface LearningModule {
+  skill: string;
+  category: SkillCategory;
+  priority: "required" | "preferred";
+  weekEstimate: number;
+  resources: LearningResource[];
+  why: string;
+}
+
+export interface LearningPlan {
+  totalWeeks: number;
+  modules: LearningModule[];
+  phases: LearningPhase[];
+}
+
+export interface LearningPhase {
   name: string;
-  manager_id: string;
-}
-
-export interface KeyResult {
-  id: string;
-  objective_id: string;
-  title: string;
-  start_value: number;
-  target_value: number;
-  current_value: number;
-  unit: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ProgressUpdate {
-  id: string;
-  key_result_id: string;
-  submitted_by: string;
-  submitted_by_name: string;
-  value: number;
-  note: string;
-  created_at: string;
-}
-
-export interface Objective {
-  id: string;
-  owner_id: string;
-  owner_name: string;
-  team_id: string;
-  title: string;
-  description: string;
-  quarter: Quarter;
-  year: number;
-  status: OKRStatus;
-  key_results: KeyResult[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TeamEmployee {
-  user: User;
-  objectives: Objective[];
-}
-
-export interface CreateObjectivePayload {
-  title: string;
-  description: string;
-  quarter: Quarter;
-  year: number;
-  key_results: {
-    title: string;
-    start_value: number;
-    target_value: number;
-    unit: string;
-  }[];
-}
-
-export interface ProgressUpdatePayload {
-  value: number;
-  note: string;
+  weeks: string;
+  focus: string[];
+  goal: string;
 }

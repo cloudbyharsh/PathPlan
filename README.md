@@ -1,165 +1,108 @@
-# CS OKR Visibility Tracker
+# PathPlan
 
-A full-stack web application for Customer Success teams to track Objectives and Key Results (OKRs) in real time — built as a portfolio project demonstrating end-to-end product thinking, system design, and engineering execution.
+**Match your CV to any job description. Identify skill gaps. Get a personalised learning plan.**
 
-**Live Demo:** [Deploy to Vercel](#deployment) · **Tech:** Next.js 14 · TypeScript · Tailwind CSS · Supabase
+PathPlan is a free, privacy-first tool that analyses your CV against a job description, gives you a match score, and generates a step-by-step learning plan to close the gaps — so you apply with confidence, not hope.
 
----
-
-## The Problem
-
-Customer Success teams set OKRs at quarter start and review them at quarter end. Everything in between is a black box. Managers can't spot at-risk goals early enough to intervene. ICs lack a shared surface to communicate blockers and progress.
-
-## The Solution
-
-A lightweight, role-aware OKR tracker that gives CS teams **continuous visibility** into quarterly objectives and key results — with timestamped progress updates, automatic status calculation, and a manager team-view to catch risks before they become misses.
+**Live demo:** [Deploy to Vercel in 1 click](#deployment)
 
 ---
 
-## Features
+## What it does
 
-### Employee View
-- Create quarterly objectives with up to 5 measurable key results
-- Submit progress updates with notes — timestamped and auditable
-- Auto-calculated status: **On Track / At Risk / Off Track** based on progress relative to time elapsed in the quarter
-- Personal dashboard with stat summary and collapsible OKR cards
-
-### Manager View
-- Team overview grouped by employee
-- Aggregate stats across the full team
-- Read-only access to all team OKRs (enforced at database layer via RLS)
-
-### Auth & Access
-- Role-based access control: `employee`, `manager`, `admin`
-- Demo mode works out of the box — no Supabase setup required
-- Production-ready Supabase auth integration included
+1. **Paste your CV** — plain text, no uploads
+2. **Paste the job description** — from any job posting
+3. **Get a match score + gap analysis** — see exactly which skills you have, which you're missing, and which are required vs. preferred
+4. **View your learning plan** — curated courses, books, and certifications prioritised by what the employer actually needs, with a 3-phase timeline
 
 ---
 
-## Demo
+## Screenshots
 
-| Account | Email | Password | Role |
+| Landing | Analyse | Results | Learning Plan |
 |---|---|---|---|
-| Sarah Chen | sarah@demo.com | demo123 | Employee |
-| Mike Rodriguez | mike@demo.com | demo123 | Manager |
-| Alex Johnson | alex@demo.com | demo123 | Employee |
+| Value prop + CTA | 2-step CV + JD input | Score ring + skill breakdown | Phased plan + resources |
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | React 18 + Vite 6 |
 | Language | TypeScript 5 |
-| Styling | Tailwind CSS 3.4 |
-| State | React Context + localStorage (demo) |
-| Database | PostgreSQL via Supabase |
-| Auth | Supabase Auth |
-| Deployment | Vercel |
+| Styling | Tailwind CSS 3 + shadcn/ui |
+| Routing | React Router 7 |
+| State | sessionStorage (no backend needed) |
+| Deployment | Vercel / Netlify / any static host |
 
 ---
 
-## Getting Started
-
-### 1. Clone & install
+## Getting started
 
 ```bash
-git clone https://github.com/cloudbyharsh/cs-okr-tracker.git
-cd cs-okr-tracker
+git clone https://github.com/cloudbyharsh/pathplan.git
+cd pathplan
 npm install
-```
-
-### 2. Run in demo mode (no setup needed)
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and log in with any demo account above.
+Open [http://localhost:5173](http://localhost:5173).
 
-The app runs entirely with in-memory mock data — no database or API keys required.
-
-### 3. Connect Supabase (production mode)
-
-```bash
-cp .env.example .env.local
-```
-
-Fill in your Supabase credentials:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_DEMO_MODE=false
-```
-
-Run the database migration in your Supabase SQL editor:
-
-```
-supabase/migrations/001_initial_schema.sql
-```
+No environment variables needed — the app runs entirely in the browser.
 
 ---
 
-## Project Structure
+## How the analysis works
+
+PathPlan uses a client-side skill taxonomy of 100+ skills across 7 categories:
+
+- **Technical** (Python, SQL, React, AWS, …)
+- **Data & Analytics** (Tableau, A/B testing, Google Analytics, …)
+- **Product & Strategy** (product management, roadmapping, GTM, …)
+- **Leadership & Management** (stakeholder management, hiring, …)
+- **Communication** (presentation, technical writing, …)
+- **Domain Knowledge** (SaaS, customer success, UX, AI, …)
+- **Tools & Platforms** (Jira, Figma, Salesforce, …)
+
+**Match score formula:**
+
+```
+required skills matched × 2  +  preferred skills matched
+───────────────────────────────────────────────────────── × 100
+required skills in JD × 2  +  preferred skills in JD
+```
+
+Required skills are weighted 2× because employers screen harder on them.
+
+**Status thresholds:**
+- ≥ 70% → Strong match
+- 45–69% → Partial match
+- < 45% → Needs work
+
+---
+
+## Project structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── login/              # Authentication page
-│   ├── dashboard/          # Employee OKR dashboard
-│   ├── objectives/new/     # Create objective form
-│   └── manager/            # Manager team overview
-├── components/
-│   ├── ui/                 # Button, Badge, ProgressBar, Modal
-│   ├── layout/             # Sidebar navigation
-│   └── okr/                # OKRCard, KeyResultRow, ProgressUpdateModal
-├── contexts/
-│   └── AppContext.tsx       # Global state management
+├── main.tsx                    # Entry point
+├── styles/index.css            # Tailwind + CSS variables
+├── types/index.ts              # TypeScript interfaces
 ├── lib/
-│   ├── utils.ts            # Status calculation, formatting
-│   └── mockData.ts         # Demo data
-└── types/
-    └── index.ts            # TypeScript interfaces
-supabase/
-└── migrations/
-    └── 001_initial_schema.sql  # PostgreSQL schema + RLS policies
-docs/
-└── SYSTEM_DESIGN.md        # Full system design document
+│   ├── utils.ts                # cn() helper
+│   ├── analyzer.ts             # CV/JD parsing + match scoring
+│   └── learningData.ts         # Learning modules + resource library
+└── app/
+    ├── App.tsx                 # Root component
+    ├── routes.tsx              # React Router config
+    ├── components/ui/          # shadcn/ui components
+    └── pages/
+        ├── Landing.tsx         # Home page
+        ├── Analyze.tsx         # CV + JD input (2-step)
+        ├── Results.tsx         # Match score + gap analysis
+        └── Plan.tsx            # Personalised learning plan
 ```
-
----
-
-## System Design
-
-See [`docs/SYSTEM_DESIGN.md`](./docs/SYSTEM_DESIGN.md) for:
-
-- Architecture diagram (Browser → Vercel → Supabase)
-- Database schema with ERD
-- Row Level Security policy design
-- API design with request/response examples
-- Auth & authorization flow
-- Status calculation logic
-- Scalability considerations
-- Implementation phases
-
----
-
-## Status Calculation
-
-The app auto-derives OKR status by comparing actual progress against time-adjusted expected progress:
-
-```
-progress_pct  = (current - start) / (target - start) × 100
-expected_pct  = days_elapsed / quarter_days × 100
-
-ON TRACK  → progress_pct ≥ expected_pct - 10
-AT RISK   → progress_pct ≥ expected_pct - 25
-OFF TRACK → progress_pct <  expected_pct - 25
-```
-
-This means an objective that's 60% complete in week 4 of a 13-week quarter is flagged **at risk** — enabling early intervention before it becomes a miss.
 
 ---
 
@@ -167,57 +110,45 @@ This means an objective that's 60% complete in week 4 of a 13-week quarter is fl
 
 ### Vercel (recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+```bash
+npm run build
+# drag dist/ to vercel.com/new or:
+npx vercel --prod
+```
 
-1. Push this repo to GitHub
-2. Import into Vercel
-3. Add environment variables from `.env.example`
-4. Deploy
+### Netlify
 
-### Environment Variables
+```bash
+npm run build
+# publish dist/
+```
 
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | For production | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | For production | Your Supabase anon key |
-| `NEXT_PUBLIC_DEMO_MODE` | Optional | Set to `true` for mock data mode |
-
----
-
-## Product Thinking
-
-This project was designed with the following PM principles:
-
-**1. Start with the pain, not the feature.** The core insight was that OKR tools fail not because teams don't set goals, but because progress is invisible between check-ins. The solution focuses on the _update_ workflow, not goal-setting.
-
-**2. Reduce friction to zero for the core action.** Submitting a progress update takes 3 clicks: hover → Update → enter value → save. No forms, no navigation, no context-switching.
-
-**3. Role-based views prevent information overload.** Employees see only their OKRs. Managers see the team in one view. Different jobs require different information densities.
-
-**4. Status is calculated, not self-reported.** Removing subjective status from the employee reduces bias and gaming. The system derives status from actual numbers.
-
-**5. Data isolation by design.** Row Level Security at the PostgreSQL layer means a mis-coded UI can never leak another user's data — security is enforced at the data layer, not just the application layer.
+No server required — pure static output.
 
 ---
 
 ## Roadmap
 
-**Phase 2 (Post-MVP)**
-- [ ] Slack integration for weekly OKR digest
-- [ ] Email notifications when objectives go at-risk
-- [ ] Quarter-over-quarter progress comparison
-
-**Phase 3 (Scale)**
-- [ ] Salesforce / JIRA sync for automated KR updates
-- [ ] AI-assisted OKR writing and grading suggestions
-- [ ] Cross-team objective alignment mapping
+- [ ] PDF export of the learning plan
+- [ ] Save / share plan via unique URL
+- [ ] Claude AI integration for smarter skill extraction
+- [ ] Job board integration (LinkedIn, Greenhouse, Lever)
+- [ ] Progress tracking dashboard
 
 ---
 
-## License
+## Product thinking
 
-MIT
+This project was built with the following PM principles:
+
+**1. Remove all friction from the core action.** The user's job is to paste text and get an answer — not create an account, upload a file, or wait for a server. The entire analysis runs in the browser, instantly.
+
+**2. Separate required from preferred.** Most gap tools treat all missing skills equally. PathPlan weights required skills 2× in the score and surfaces them separately — matching how real hiring managers think.
+
+**3. A score without a plan is useless.** The match score is the hook, but the learning plan is the value. Every gap links directly to a curated, prioritised resource — not a generic Google search.
+
+**4. Privacy-first by design.** CV data is sensitive. By running entirely client-side with no backend, PathPlan never stores or transmits your CV. This isn't a features note — it's an architecture decision.
 
 ---
 
-*Built by [Harsh Shah](https://github.com/cloudbyharsh) — Product Manager & CS OKR enthusiast*
+*Built by [Harsh Shah](https://github.com/cloudbyharsh)*
