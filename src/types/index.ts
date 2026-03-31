@@ -6,10 +6,10 @@ export interface SkillMatch {
 }
 
 export interface AnalysisResult {
-  matchScore: number;               // 0–100
-  strongMatches: string[];          // skills in both CV and JD
-  skillGaps: SkillGap[];            // skills in JD but not CV
-  extraSkills: string[];            // skills in CV but not JD (bonuses)
+  matchScore: number;
+  strongMatches: string[];
+  skillGaps: SkillGap[];
+  extraSkills: string[];
   cvSummary: CVSummary;
   jdSummary: JDSummary;
 }
@@ -72,4 +72,34 @@ export interface LearningPhase {
   weeks: string;
   focus: string[];
   goal: string;
+}
+
+// ── Plan configuration ────────────────────────────────────
+
+export interface PlanConfig {
+  totalDays: 14 | 21 | 30;
+  hoursPerDay: number;
+  startDate: string;
+  planId: string;
+}
+
+// ── Day-level task produced by the scheduler ─────────────
+
+export interface DayTask {
+  day: number;
+  skillName: string;
+  skillCategory: SkillCategory;
+  priority: "required" | "preferred";
+  why: string;
+  resource: LearningResource;
+  microTask: string;
+}
+
+// ── Check-in entry persisted in localStorage ─────────────
+
+export interface CheckInEntry {
+  day: number;
+  planId: string;
+  completedAt: string;
+  reflection: string;
 }

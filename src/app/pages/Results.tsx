@@ -74,7 +74,7 @@ export default function Results() {
             <span className="font-bold text-gray-900">PathPlan</span>
           </div>
           <button
-            onClick={() => navigate("/plan")}
+            onClick={() => navigate("/plan-config")}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors"
           >
             View learning plan <ArrowRight className="w-4 h-4" />
@@ -210,7 +210,7 @@ export default function Results() {
             Your personalised learning plan is ready — prioritised by what this role actually needs.
           </p>
           <button
-            onClick={() => navigate("/plan")}
+            onClick={() => navigate("/plan-config")}
             className="inline-flex items-center gap-2 bg-white text-indigo-600 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition-colors"
           >
             View my learning plan
