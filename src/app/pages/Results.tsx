@@ -1,5 +1,236 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { ArrowRight, ArrowLeft, Terminal } from "lucide-react";
+import { AnalysisResult } from "@/types";
+
+function AsciiProgressBar({ value, max = 100, width = 24 }: { value: number; max?: number; width?: number }) {
+  const filled = Math.round((value / max) * width);
+  const empty = width - filled;
+  const color = value >= 70 ? "#33ff00" : value >= 45 ? "#ffb000" : "#ff3333";
+  const label = value >= 70 ? "[STRONG MATCH]" : value >= 45 ? "[PARTIAL MATCH]" : "[NEEDS WORK]";
+  return (
+    <div className="font-mono text-xs">
+      <div className="flex items-center gap-2 mb-1">
+        <span style={{ color }}>
+          [{"█".repeat(filled)}{"░".repeat(empty)}] {value}%
+        </span>
+      </div>
+      <div style={{ color }} className="text-glow">{label}</div>
+    </div>
+  );
+}
+
+function SkillBadge({ skill, variant }: { skill: string; variant: "green" | "amber" | "red" }) {
+  const styles = {
+    green: "text-[#33ff00] border-[#33ff00] text-glow",
+    amber: "text-[#ffb000] border-[#ffb000] text-glow-amber",
+    red: "text-[#ff3333] border-[#ff3333]",
+  };
+  return (
+    <span className={`term-badge ${styles[variant]}`}>
+      {variant === "green" && "+"}{variant === "red" && "✗"}{variant === "amber" && "~"} {skill}
+    </span>
+  );
+}
+
+export default function Results() {
+  const navigate = useNavigate();
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("pp_analysis");
+    if (!stored) { navigate("/analyze"); return; }
+    setAnalysis(JSON.parse(stored) as AnalysisResult);
+  }, [navigate]);
+
+  if (!analysis) return null;
+
+  const { matchScore, strongMatches, skillGaps, extraSkills, cvSummary, jdSummary } = analysis;
+  const requiredGaps = skillGaps.filter((g) => g.priority === "required");
+  const preferredGaps = skillGaps.filter((g) => g.priority === "preferred");
+  const scoreColor = matchScore >= 70 ? "#33ff00" : matchScore >= 45 ? "#ffb000" : "#ff3333";
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] font-mono text-[#33ff00] relative">
+      <div className="crt-overlay" />
+
+      {/* Header */}
+      <header className="border-b border-[#1f521f] sticky top-0 bg-[#0a0a0a] z-10">
+        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+          <button onClick={() => navigate("/analyze")} className="flex items-center gap-2 text-xs text-[#1f521f] hover:text-[#33ff00] transition-colors">
+            <ArrowLeft className="w-3 h-3" strokeWidth={2} /> [ edit inputs ]
+          </button>
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-[#33ff00] text-glow" strokeWidth={2} />
+            <span className="font-bold text-[#33ff00] text-glow text-sm tracking-widest uppercase">PathPlan</span>
+          </div>
+          <button
+            onClick={() => navigate("/plan")}
+            className="flex items-center gap-1.5 text-xs text-[#ffb000] text-glow-amber hover:text-[#0a0a0a] hover:bg-[#ffb000] border border-[#ffb000] px-3 py-1 transition-all"
+          >
+            [ learning plan ] <ArrowRight className="w-3 h-3" strokeWidth={2} />
+          </button>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
+
+        {/* Hero score pane */}
+        <div className="term-pane">
+          <div className="term-pane-header">
+            +─────────────── ANALYSIS_RESULTS.out ───────────────+
+          </div>
+          <div className="p-6 grid md:grid-cols-3 gap-8 items-center">
+            {/* Score */}
+            <div className="flex flex-col items-center justify-center border border-[#1f521f] p-6">
+              <div className="text-xs text-[#1f521f] mb-3">match_score</div>
+              <div className="text-7xl font-bold text-glow mb-2" style={{ color: scoreColor }}>
+                {matchScore}
+              </div>
+              <div className="text-xs mb-4" style={{ color: scoreColor }}>out of 100</div>
+              <AsciiProgressBar value={matchScore} width={20} />
+            </div>
+
+            {/* Stats */}
+            <div className="md:col-span-2 space-y-4">
+              <div>
+                <div className="text-xs text-[#1f521f] mb-1">$ target_role --name</div>
+                <h1 className="text-lg font-bold text-[#33ff00] text-glow uppercase tracking-wide">
+                  {jdSummary.role}
+                </h1>
+                {jdSummary.company && (
+                  <p className="text-xs text-[#1f521f] mt-1">company: {jdSummary.company}</p>
+                )}
+              </div>
+
+              <div className="border-t border-[#1f521f] pt-4">
+                <div className="text-xs text-[#1f521f] mb-3">$ stats --summary</div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="border border-[#1f521f] p-3">
+                    <div className="text-2xl font-bold text-[#33ff00] text-glow">{strongMatches.length}</div>
+                    <div className="text-xs text-[#1f521f] mt-1">skills matched</div>
+                  </div>
+                  <div className="border border-[#ffb000] p-3">
+                    <div className="text-2xl font-bold text-[#ffb000] text-glow-amber">{skillGaps.length}</div>
+                    <div className="text-xs text-[#1f521f] mt-1">gaps to close</div>
+                  </div>
+                  <div className="border border-[#1f521f] p-3">
+                    <div className="text-2xl font-bold text-[#33ff00] text-glow">{extraSkills.length}</div>
+                    <div className="text-xs text-[#1f521f] mt-1">bonus skills</div>
+                  </div>
+                </div>
+              </div>
+
+              {cvSummary.yearsOfExperience && (
+                <div className="text-xs text-[#1f521f]">
+                  experience: <span className="text-[#33ff00]">{cvSummary.yearsOfExperience} years</span>
+                  {jdSummary.seniority !== "unknown" && (
+                    <> · seniority: <span className="text-[#33ff00]">{jdSummary.seniority}</span></>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Matches + Bonus grid */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Strong matches */}
+          <div className="term-pane">
+            <div className="term-pane-header">+─── MATCHED_SKILLS [{strongMatches.length}] ───+</div>
+            <div className="p-4">
+              <div className="text-xs text-[#1f521f] mb-3">$ skills --matched --status=found</div>
+              {strongMatches.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {strongMatches.map((s) => <SkillBadge key={s} skill={s} variant="green" />)}
+                </div>
+              ) : (
+                <p className="text-xs text-[#1f521f]">// no matching skills detected · add more detail to your cv</p>
+              )}
+            </div>
+          </div>
+
+          {/* Bonus skills */}
+          <div className="term-pane">
+            <div className="term-pane-header">+─── BONUS_SKILLS [{extraSkills.length}] ───+</div>
+            <div className="p-4">
+              <div className="text-xs text-[#1f521f] mb-3">$ skills --extra --status=beyond-jd</div>
+              {extraSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {extraSkills.map((s) => <SkillBadge key={s} skill={s} variant="amber" />)}
+                </div>
+              ) : (
+                <p className="text-xs text-[#1f521f]">// no extra skills detected beyond the JD requirements</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Skill gaps */}
+        {skillGaps.length > 0 && (
+          <div className="term-pane">
+            <div className="term-pane-header">+─── SKILL_GAPS [{skillGaps.length}] ───+</div>
+            <div className="p-4 space-y-5">
+              {requiredGaps.length > 0 && (
+                <div>
+                  <div className="text-xs text-[#ff3333] mb-3">
+                    [ERR] required — close these first
+                    <span className="text-[#1f521f] ml-2">// blocking gaps</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {requiredGaps.map((g) => (
+                      <span key={g.skill} className="term-badge text-[#ff3333] border-[#ff3333]">
+                        ✗ {g.skill} <span className="text-[#ff3333]/50">// {g.category}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {requiredGaps.length > 0 && preferredGaps.length > 0 && (
+                <div className="ascii-divider">────────────────────────────────────────────</div>
+              )}
+              {preferredGaps.length > 0 && (
+                <div>
+                  <div className="text-xs text-[#ffb000] mb-3 text-glow-amber">
+                    [WARN] preferred — will differentiate you
+                    <span className="text-[#1f521f] ml-2">// nice-to-have</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {preferredGaps.map((g) => (
+                      <span key={g.skill} className="term-badge text-[#ffb000] border-[#ffb000] text-glow-amber">
+                        ~ {g.skill} <span className="text-[#ffb000]/50">// {g.category}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="border border-[#33ff00] p-8 text-center">
+          <div className="text-xs text-[#1f521f] mb-3">// learning plan is ready · prioritised by role requirements</div>
+          <h2 className="text-xl font-bold text-[#33ff00] text-glow uppercase tracking-widest mb-2">
+            {skillGaps.length > 0
+              ? `[${skillGaps.length}] SKILL GAPS DETECTED.`
+              : "[OK] GREAT MATCH — STRENGTHEN YOUR APPLICATION."}
+          </h2>
+          <p className="text-xs text-[#33ff00]/60 mb-6">
+            Your personalised learning plan is ready — prioritised by what this role actually needs.
+          </p>
+          <button
+            onClick={() => navigate("/plan")}
+            className="term-btn text-sm flex items-center gap-2 mx-auto"
+          >
+            [ view my learning plan ] <ArrowRight className="w-4 h-4" strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { ArrowRight, ArrowLeft, CheckCircle, XCircle, AlertCircle, TrendingUp, Zap } from "lucide-react";
 import { AnalysisResult } from "@/types";
 
